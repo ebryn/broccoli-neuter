@@ -25,7 +25,7 @@ Neuter.prototype.write = function (readTree, destDir) {
 
     addModule(self.options.src.slice(0, -3));
 
-    var outputSrc = output.map(function(obj) { return "(function() {\n" + obj.src + "\n})();"; }).join("\n");
+    var outputSrc = output.map(function(obj) { return "(function() {\n\n" + obj.src + "\n\n})();"; }).join("\n\n");
     fs.writeFileSync(path.join(destDir, self.options.dest), outputSrc);
 
     function addModule (moduleName, sourceFile) {

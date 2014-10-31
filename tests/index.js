@@ -10,7 +10,7 @@ var broccoli = require('broccoli');
 var Neuter = require('..');
 
 describe('broccoli-neuter', function(){
-  var fixturePath = path.join(__dirname, 'fixtures');
+  var fixtureRoot = path.join(__dirname, 'fixtures');
   var builder;
 
   afterEach(function() {
@@ -19,20 +19,34 @@ describe('broccoli-neuter', function(){
     }
   });
 
-  it('works', function() {
-    var inputPath = path.join(fixturePath, 'dir1');
-    var tree = new Neuter(inputPath, {src: 'a.js', dest: 'output.js'});
+  function runTestFixture(name) {
+    it(name, function() {
+      var fixturePath = path.join(fixtureRoot, name);
+      var inputPath = path.join(fixturePath, 'input');
+      var expectedOutput = fs.readFileSync(path.join(fixturePath, 'output', 'expected.js'));
 
-    builder = new broccoli.Builder(tree);
-    return builder.build()
-      .then(function(results) {
-        var outputPath = results.directory;
-        var outputFiles = fs.readdirSync(outputPath);
-        expect(outputFiles).to.eql(["output.js"]);
+      var tree = new Neuter(inputPath, {src: 'index.js', dest: 'output.js'});
 
-        var outputFileContents = fs.readFileSync(path.join(outputPath, "output.js"));
-        var expectedOutputContents = fs.readFileSync(path.join(inputPath, "expected.js"));
-        expect(outputFileContents.toString()).to.eql(expectedOutputContents.toString());
-      });
-  });
+      builder = new broccoli.Builder(tree);
+      return builder.build()
+        .then(function(results) {
+          var outputPath = results.directory;
+          var outputFiles = fs.readdirSync(outputPath);
+          expect(outputFiles).to.eql(["output.js"]);
+
+          var actualOutput = fs.readFileSync(path.join(outputPath, "output.js"));
+          expect(actualOutput.toString()).to.eql(expectedOutput.toString());
+        });
+    });
+  }
+
+  runTestFixture("simple_require_statements");
+  runTestFixture("duplicate_require_statements");
+  runTestFixture("circular_require_statements");
+  runTestFixture("respects_code_order_between_requires");
+  runTestFixture("do_not_replace_requires_in_statements");
+  runTestFixture("comment_out_require");
+  runTestFixture("spaces_allowed_within_require_statement");
+  runTestFixture("optional_semicolons");
+  runTestFixture("optional_dotjs");
 });
